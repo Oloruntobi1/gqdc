@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0-oracle
+    container_name: wallet-db
+    networks:
+      - quikgaming
+    ports:
+      - 3306:3306
+    volumes:
+      - my-db:/var/lib/mysql
+    env_file:
+      - .env
+
+  redis:
+    image: redis:5.0.3
+    container_name: wallet-redis
+    networks:
+      - quikgaming
+    ports:
+      - 6379:6379
+    env_file:
+      - .env
+   
+  web:
+    depends_on:
+      - mysql
+    build:
+      context: .
+      target: ${STAGE}
+    networks:
+      - quikgaming
+    ports:
+      - 8080:8080
+    volumes:
+      - ./:/app
+    env_file:
+      - .env
+    restart: unless-stopped
+
+  webtest:
+    tty: true
+    stdin_open: true
+    build:
+      context: .
+      target: test
+    networks:
+      - quikgaming
+    environment:
+      - ENV=test
+    env_file:
+      - .env
+
+
+# Names our volume
+volumes:
+  my-db:
+
+networks:
+  quikgaming:
+    driver: bridge
